@@ -1,0 +1,31 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Dockhand: Debug Dev Server",
+			"type": "node",
+			"request": "launch",
+			"cwd": "${workspaceFolder}",
+			"runtimeExecutable": "node",
+			"runtimeArgs": [
+				"${workspaceFolder}/node_modules/vite/bin/vite.js",
+				"dev",
+				"--host",
+				"0.0.0.0"
+			],
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen",
+			"skipFiles": ["<node_internals>/**"]
+		},
+		{
+			"name": "Dockhand: Attach to Dev Server",
+			"type": "node",
+			"request": "attach",
+			"port": 9229,
+			"address": "localhost",
+			"restart": true,
+			"cwd": "${workspaceFolder}",
+			"skipFiles": ["<node_internals>/**"]
+		}
+	]
+}

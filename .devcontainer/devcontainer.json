@@ -1,0 +1,67 @@
+{
+	"name": "Dockhand Dev",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": ".."
+	},
+	"workspaceFolder": "/workspaces/dockhand",
+	"remoteUser": "node",
+	"updateRemoteUserUID": true,
+
+	// Gives the container the `docker` CLI wired up to the *host's* Docker
+	// Engine (via docker.sock), rather than a nested/isolated daemon. That's
+	// required for Dockhand itself to be able to see and manage the real
+	// containers running under Docker Desktop.
+	"features": {
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+			"installDockerBuildx": true,
+			"installDockerComposeSwitch": true
+		}
+	},
+
+	// node_modules lives in a named volume instead of the bind-mounted
+	// workspace. Without this, native addons (better-sqlite3, argon2) built
+	// on the Windows host (or on a previous container ABI) get bind-mounted
+	// straight into the Linux container and fail to load — this is the
+	// most common reason "npm run dev" silently dies on WSL2/Docker Desktop
+	// setups. It also avoids the slow Windows<->WSL2 bind-mount I/O path.
+	"mounts": [
+		"source=dockhand-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
+	],
+
+	"containerEnv": {
+		"DATA_DIR": "${containerWorkspaceFolder}/data"
+	},
+
+	// 5173 = SvelteKit/Vite dev server, 5174 = terminal WebSocket server
+	// (see vite.config.ts), 9229 = Node inspector for attach-based debugging.
+	// Deliberately not in forwardPorts: none of these listen until the dev
+	// server (or a debug session) is actually started, and forwardPorts
+	// makes VS Code eagerly probe them on attach, retrying/failing in a
+	// loop ("ECONNREFUSED ... ") until something listens. Automatic port
+	// detection picks them up as soon as they're live and applies these
+	// labels via portsAttributes below.
+	"portsAttributes": {
+		"5173": { "label": "Dockhand (Vite dev)", "onAutoForward": "openBrowser" },
+		"5174": { "label": "Dockhand terminal WS", "onAutoForward": "silent" },
+		"9229": { "label": "Node inspector", "onAutoForward": "silent" }
+	},
+
+	// Fix ownership of the node_modules volume (fresh volumes are root-owned),
+	// then install. Native deps get rebuilt correctly for this container's
+	// platform since we never inherit a host-built node_modules.
+	"onCreateCommand": "sudo chown node:node ${containerWorkspaceFolder}/node_modules && git config --global --add safe.directory /workspaces/dockhand",
+	"postCreateCommand": "npm install",
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"svelte.svelte-vscode",
+				"dbaeumer.vscode-eslint",
+				"esbenp.prettier-vscode",
+				"bradlc.vscode-tailwindcss",
+				"ms-azuretools.vscode-docker"
+			]
+		}
+	}
+}
