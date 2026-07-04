@@ -1193,7 +1193,14 @@ export default defineConfig({
 		__APP_VERSION__: JSON.stringify(getGitTag())
 	},
 	optimizeDeps: {
-		include: ['lucide-svelte', '@xterm/xterm', '@xterm/addon-fit']
+		include: ['lucide-svelte', '@xterm/xterm', '@xterm/addon-fit'],
+		// layerchart ships raw .svelte source with TS-only syntax (e.g. optional
+		// params). Vite's esbuild-based dependency scanner doesn't route these
+		// through the Svelte plugin's TS-aware transform and fails to parse them,
+		// crashing the dev server on a cold optimizeDeps run. Excluding it here
+		// lets it go through the normal (working) Svelte/TS transform pipeline
+		// instead of the naive prebundle scan.
+		exclude: ['layerchart']
 	},
 	resolve: {
 		dedupe: [
