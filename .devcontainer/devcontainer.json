@@ -51,7 +51,11 @@
 	// then install. Native deps get rebuilt correctly for this container's
 	// platform since we never inherit a host-built node_modules.
 	"onCreateCommand": "sudo chown node:node ${containerWorkspaceFolder}/node_modules && git config --global --add safe.directory /workspaces/dockhand",
-	"postCreateCommand": "npm install",
+	// Docker Desktop's WSL2 network path degrades badly under npm's default
+	// concurrency (15 parallel sockets), causing ETIMEDOUT partway through a
+	// fresh install. Lowering concurrency and raising retry/timeout budgets
+	// makes the same install succeed reliably, just slower.
+	"postCreateCommand": "npm config set maxsockets 6 fetch-retries 5 fetch-retry-mintimeout 20000 fetch-retry-maxtimeout 120000 fetch-timeout 600000 && npm install",
 
 	"customizations": {
 		"vscode": {
